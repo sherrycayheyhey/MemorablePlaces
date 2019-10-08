@@ -9,6 +9,8 @@ import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.location.Address;
+import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -22,7 +24,12 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
-public class MapActivity extends FragmentActivity implements OnMapReadyCallback {
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
+
+public class MapActivity extends FragmentActivity implements OnMapReadyCallback, GoogleMap.OnMapLongClickListener {
 
     private GoogleMap mMap;
     LocationManager locationManager;
@@ -68,6 +75,8 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
 
+        mMap.setOnMapLongClickListener(this);
+
         //get the intent
         Intent intent = getIntent();
         //Toast.makeText(this, Integer.toString(intent.getIntExtra("myInfo", 0)), Toast.LENGTH_SHORT).show();
@@ -101,7 +110,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
             //check to see if we have permission
             if(ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
                 //if we DO have permission, request location updates
-                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
+                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 10000, 0, locationListener);
                 //get the last known location
                 Location lastKnownLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
                 centerMapOnLocation(lastKnownLocation, "YOU ARE HERE");
@@ -109,5 +118,39 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
                 ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
             }
         }
+    }
+
+    @Override
+    public void onMapLongClick(LatLng latLng) {
+
+        //get a Geocoder set up
+        Geocoder geocoder = new Geocoder(getApplicationContext(), Locale.getDefault());
+
+        String address = "";
+        try{
+            //get the list of addresses from the geocoder
+            List<Address> listAddresses = geocoder.getFromLocation(latLng.latitude, latLng.longitude, 1);
+
+            //see if we got some information back
+            if (listAddresses != null && listAddresses.size() > 0) {
+                if (listAddresses.get(0).getThoroughfare() != null) {
+                    if (listAddresses.get(0).getSubThoroughfare() != null) {
+                        address += listAddresses.get(0).getSubThoroughfare() + " ";
+                    }
+                    address += listAddresses.get(0).getThoroughfare();
+                }
+            }
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+
+        //if the address is empty, set the address to be the timestamp
+        if (address.equals("")) {
+            SimpleDateFormat sdf = new SimpleDateFormat("HH:mm yyyy-MM-dd");
+            address += sdf.format(new Date());
+
+        }
+
+        mMap.addMarker(new MarkerOptions().position(latLng).title(address));
     }
 }
