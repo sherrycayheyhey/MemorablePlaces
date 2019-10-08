@@ -59,7 +59,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
         }
     }
 
-    //center in on a specific loction, display a title for the location based on a passed-in string
+    //center in on a specific location, display a title for the location based on a passed-in string
     public void centerMapOnLocation(Location location, String title) {
         //make sure there's actually a location (most likely only an issue if testing on a virtual device)
         if (location != null) {
@@ -82,7 +82,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
         //Toast.makeText(this, Integer.toString(intent.getIntExtra("myInfo", 0)), Toast.LENGTH_SHORT).show();
 
         //check if the first item was selected (add new location)
-        if (intent.getIntExtra("myInfo", 0) == 0) {
+        if (intent.getIntExtra("placeNumber", 0) == 0) {
             //zoom in on device location
             locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
             locationListener = new LocationListener() {
@@ -117,6 +117,12 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
             } else {
                 ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
             }
+        } else {
+            Location placeLocation = new Location(LocationManager.GPS_PROVIDER);
+            placeLocation.setLatitude(MainActivity.listLocations.get(intent.getIntExtra("placeNumber", 0)).latitude);
+            placeLocation.setLongitude(MainActivity.listLocations.get(intent.getIntExtra("placeNumber", 0)).longitude);
+
+            centerMapOnLocation(placeLocation, MainActivity.memorableLocations.get(intent.getIntExtra("placeNumber", 0)));
         }
     }
 
@@ -152,5 +158,13 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
         }
 
         mMap.addMarker(new MarkerOptions().position(latLng).title(address));
+
+        MainActivity.memorableLocations.add(address);
+        MainActivity.listLocations.add(latLng);
+
+        //go look at the array again, we've got some new info so go look at it
+        MainActivity.arrayAdapter.notifyDataSetChanged();
+
+        Toast.makeText(this, "location saved", Toast.LENGTH_SHORT).show();
     }
 }

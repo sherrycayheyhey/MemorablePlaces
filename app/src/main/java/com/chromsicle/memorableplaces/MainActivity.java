@@ -10,6 +10,8 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import com.google.android.gms.maps.model.LatLng;
+
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
@@ -19,9 +21,11 @@ public class MainActivity extends AppCompatActivity {
     //if you longhold on the map, it adds a marker and the address name to the listview
     //if the address isn't available, save some other name/info to the listview
 
+    //create the array lists for the map markers and the ListView
+    static ArrayList<String> memorableLocations = new ArrayList<>();
+    static ArrayList<LatLng> listLocations = new ArrayList<>();
 
-
-
+    static ArrayAdapter arrayAdapter;
 
 
     @Override
@@ -31,11 +35,15 @@ public class MainActivity extends AppCompatActivity {
 
         //find the view, create the ArrayList, add the first list item
         ListView locationsList  = findViewById(R.id.locationsListView);
-        ArrayList<String> memorableLocations = new ArrayList<>();
+
         memorableLocations.add("Add a new location");
 
+        //create an ArrayList for the locations in the ListView
+
+        listLocations.add(new LatLng(0,0));
+
         //create an ArrayAdapter, connect it to the Listview
-        ArrayAdapter arrayAdapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1, memorableLocations);
+        arrayAdapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1, memorableLocations);
         locationsList.setAdapter(arrayAdapter);
 
         //set the onClick listener for when list items are clicked
@@ -46,7 +54,7 @@ public class MainActivity extends AppCompatActivity {
                 //use an intent to move over to the next activity
                 Intent intent = new Intent(getApplicationContext(), MapActivity.class);
                 //use an extra let the next activity know which list item was selected
-                intent.putExtra("myInfo", i);
+                intent.putExtra("placeNumber", i);
 
                 //now go to the other activity to handle receiving this info!!
 
