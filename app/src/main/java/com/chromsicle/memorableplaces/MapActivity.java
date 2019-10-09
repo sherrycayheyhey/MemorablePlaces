@@ -8,6 +8,7 @@ import androidx.fragment.app.FragmentActivity;
 import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Address;
 import android.location.Geocoder;
@@ -25,6 +26,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -164,6 +166,30 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
 
         //go look at the array again, we've got some new info so go look at it
         MainActivity.arrayAdapter.notifyDataSetChanged();
+
+        //save whatever's in the 2 arrays to SharedPreferences
+        SharedPreferences sharedPreferences = this.getSharedPreferences("com.chromsicle.memorableplaces", Context.MODE_PRIVATE);
+        //start to save things
+        try {
+            //memorableLocations is an array of string objects so saving it is easy
+            sharedPreferences.edit().putString("places", ObjectSerializer.serialize(MainActivity.memorableLocations)).apply();
+
+            //listLocations is an array of LatLng objects so it has to be deconstructed to save
+            ArrayList<String> latitudes = new ArrayList<>();
+            ArrayList<String> longitudes = new ArrayList<>();
+
+            for(LatLng coord : MainActivity.listLocations) { //loop through everything in listLocations
+                latitudes.add(Double.toString(coord.latitude));
+                longitudes.add(Double.toString(coord.longitude));
+            }
+
+            sharedPreferences.edit().putString("lat", ObjectSerializer.serialize(latitudes)).apply();
+            sharedPreferences.edit().putString("long", ObjectSerializer.serialize(longitudes)).apply();
+
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         Toast.makeText(this, "location saved", Toast.LENGTH_SHORT).show();
     }

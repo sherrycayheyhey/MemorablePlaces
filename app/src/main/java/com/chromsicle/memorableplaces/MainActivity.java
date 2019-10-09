@@ -2,7 +2,9 @@ package com.chromsicle.memorableplaces;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
@@ -33,14 +35,48 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        //find the view, create the ArrayList, add the first list item
+        //get access to the SharedPreferences
+        SharedPreferences sharedPreferences = this.getSharedPreferences("com.chromsicle.memorableplaces", Context.MODE_PRIVATE);
+        //make the arraylists for the lat and long
+        ArrayList<String> latitudes = new ArrayList<>();
+        ArrayList<String> longitudes = new ArrayList<>();
+
+        //make sure you have fresh ArrayLists
+        memorableLocations.clear();
+        latitudes.clear();
+        longitudes.clear();
+        listLocations.clear();
+
+        //pull this out of SharedPreferences
+        try {
+            //get the places/memorableLocations, latitudes, and longitudes from SharedPreferences
+            memorableLocations = (ArrayList<String>) ObjectSerializer.deserialize(sharedPreferences.getString("places", ObjectSerializer.serialize(new ArrayList<String>())));
+            latitudes = (ArrayList<String>) ObjectSerializer.deserialize(sharedPreferences.getString("lat", ObjectSerializer.serialize(new ArrayList<String>())));
+            longitudes = (ArrayList<String>) ObjectSerializer.deserialize(sharedPreferences.getString("long", ObjectSerializer.serialize(new ArrayList<String>())));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        //check that latitudes and longitudes can go into listLocations
+        if(memorableLocations.size() > 0 && latitudes.size() > 0 && longitudes.size() > 0) {
+            //check that latitudes and longitudes are the same size as memorableLocations
+            if(memorableLocations.size() == latitudes.size() && memorableLocations.size() == longitudes.size()) {
+                //reconstruct: take the latitudes and longitudes and merge them into the arraylist for listLocations
+                for(int i=0; i < latitudes.size(); i++) {
+                    listLocations.add(new LatLng(Double.parseDouble(latitudes.get(i)), Double.parseDouble(longitudes.get(i))));
+                }
+            }
+        } else {
+            //if the lists aren't the same size,
+            // it's probably the first time the app has been opened so add new stuff
+            memorableLocations.add("Add a new location");
+            listLocations.add(new LatLng(0,0));
+        }
+
+
+
+        //find the view
         ListView locationsList  = findViewById(R.id.locationsListView);
-
-        memorableLocations.add("Add a new location");
-
-        //create an ArrayList for the locations in the ListView
-
-        listLocations.add(new LatLng(0,0));
 
         //create an ArrayAdapter, connect it to the Listview
         arrayAdapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1, memorableLocations);
